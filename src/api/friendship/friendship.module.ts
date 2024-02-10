@@ -8,5 +8,6 @@ import { FriendshipService } from './friendship.service';
   imports: [DatabaseModule],
   controllers: [FriendshipController],
   providers: [FriendshipService, ...friendshipProviders],
+  exports: [FriendshipService],
 })
 export class FriendshipModule {}

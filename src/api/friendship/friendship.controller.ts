@@ -62,4 +62,10 @@ export class FriendshipController {
   ) {
     return this.friendshipService.friend(tokenPayload.name, dto.name);
   }
+
+  @UseGuards(JwtGuard)
+  @Get('friends')
+  friends(@GetTokenPayload() tokenPayload: TokenPayload) {
+    return this.friendshipService.friends(tokenPayload.name);
+  }
 }

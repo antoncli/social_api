@@ -63,6 +63,13 @@ export class FriendshipService {
     return { friend: res != null };
   }
 
+  async friends(name: string) {
+    return [
+      ...((await this.friendshipModel.find({ name1: name })) || []),
+      ...((await this.friendshipModel.find({ name2: name })) || []),
+    ];
+  }
+
   private async findFriendship(name1: string, name2: string) {
     return (
       (await this.friendshipModel.findOne({ name1, name2 })) ||
