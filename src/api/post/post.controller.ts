@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Sse,
+  UseGuards,
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import { JwtGuard } from '../auth/guard';
 import { GetTokenPayload } from '../auth/decorator';
@@ -7,6 +15,14 @@ import { AddDto } from './dto/add.dto';
 import { GetDto } from './dto/get.dto';
 import { DeleteDto } from './dto/delete.dto';
 import { GetFriendsDto } from './dto/get_friends.dto';
+import { Observable, interval, map } from 'rxjs';
+
+interface MessageEvent {
+  data: string | object;
+  id?: string;
+  type?: string;
+  retry?: number;
+}
 
 @Controller('post')
 export class PostController {

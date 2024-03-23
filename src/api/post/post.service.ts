@@ -2,6 +2,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { Model } from 'mongoose';
 import { Post } from './interfaces/post.interface';
 import { FriendshipService } from '../friendship/friendship.service';
+import { NotificationService } from '../notification/notification.service';
 
 @Injectable({})
 export class PostService {
@@ -9,7 +10,10 @@ export class PostService {
     @Inject('POST_MODEL')
     private postModel: Model<Post>,
     private friendshipService: FriendshipService,
-  ) {}
+    private notificationService: NotificationService,
+  ) {
+    this.test();
+  }
 
   async add(name: string, text: string) {
     const post = new this.postModel({ name, text });
@@ -52,5 +56,11 @@ export class PostService {
   async delete(name: string, id: string) {
     const res = await this.postModel.deleteOne({ name, _id: id });
     if (!res.deletedCount) throw new BadRequestException('Invalid post data!');
+  }
+
+  async test() {
+    setInterval(() => {
+      this.notificationService.emitEvent('test', { msg: 'hello' });
+    }, 2000);
   }
 }

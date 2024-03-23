@@ -5,6 +5,7 @@ import { RegisterModule } from './api/register/register.module';
 import { UserModule } from './api/user/users.module';
 import { FriendshipModule } from './api/friendship/friendship.module';
 import { PostModule } from './api/post/post.module';
+import { NotificationModule } from './api/notification/notification.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { PostModule } from './api/post/post.module';
     UserModule,
     FriendshipModule,
     PostModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}
