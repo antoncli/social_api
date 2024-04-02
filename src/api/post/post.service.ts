@@ -3,6 +3,7 @@ import { Model } from 'mongoose';
 import { Post } from './interfaces/post.interface';
 import { FriendshipService } from '../friendship/friendship.service';
 import { NotificationService } from '../notification/notification.service';
+import { Notification } from '../notification/enums/notification';
 
 @Injectable({})
 export class PostService {
@@ -11,13 +12,12 @@ export class PostService {
     private postModel: Model<Post>,
     private friendshipService: FriendshipService,
     private notificationService: NotificationService,
-  ) {
-    this.test();
-  }
+  ) {}
 
   async add(name: string, text: string) {
     const post = new this.postModel({ name, text });
     await post.save();
+    this.emit(name, Notification.postAdded);
   }
 
   async get(name: string, page: number, limit: number) {
@@ -56,11 +56,11 @@ export class PostService {
   async delete(name: string, id: string) {
     const res = await this.postModel.deleteOne({ name, _id: id });
     if (!res.deletedCount) throw new BadRequestException('Invalid post data!');
+    this.emit(name, Notification.postDeleted);
   }
 
-  async test() {
-    setInterval(() => {
-      this.notificationService.emitEvent('test', { msg: 'hello' });
-    }, 2000);
+  private emit(name: string, notification: Notification) {
+    this.notificationService.emit(name, notification);
+    this.notificationService.emitForFriends(name, notification);
   }
 }

@@ -1,48 +1,35 @@
 import {
   WebSocketGateway,
   OnGatewayInit,
-  OnGatewayConnection,
-  OnGatewayDisconnect,
   WebSocketServer,
-  MessageBody,
-  SubscribeMessage,
+  OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ConfigService } from '@nestjs/config/dist/config.service';
-import { UseGuards } from '@nestjs/common';
-import { WsJwtGuard } from '../auth/guard';
 import { SocketAuthMiddleware } from '../auth/guard/ws.middleware';
+import { Notification } from './enums/notification';
+import { WsJwtGuard } from '../auth/guard';
 
 @WebSocketGateway({
-  namespace: 'events',
+  namespace: 'notification',
   cors: {
     origin: ['http://localhost:3333'],
   },
 })
-@UseGuards(WsJwtGuard)
-export class NotificationGateway
-  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
-{
+export class NotificationGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server!: Server;
-
-  constructor(private readonly config: ConfigService) {}
-
-  handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
-  }
-
-  handleDisconnect(client: Socket) {
-    console.log(`Client disconnected: ${client.id}`);
-  }
+  user!: string;
 
   afterInit(client: Socket) {
     client.use(SocketAuthMiddleware() as any);
-    console.log('WebSocket Gateway initialized');
   }
 
-  @SubscribeMessage('message')
-  handleMessage(@MessageBody() data: any): string {
-    return data;
+  handleConnection(client: any, ...args: any[]) {
+    this.user = WsJwtGuard.validateToken(client).name;
+  }
+
+  emit(user: string, notification: Notification) {
+    if (user !== this.user) return;
+    this.server.emit(notification);
   }
 }

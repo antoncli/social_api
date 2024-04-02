@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Socket } from 'socket.io';
 import { Observable } from 'rxjs';
 import { JwtService } from '@nestjs/jwt';
+import { TokenPayload } from '../interfaces/token-payload.interface';
 
 export class WsJwtGuard extends AuthGuard('wsjwt') implements CanActivate {
   constructor() {
@@ -23,9 +24,9 @@ export class WsJwtGuard extends AuthGuard('wsjwt') implements CanActivate {
   }
 
   static validateToken(client: Socket) {
-    const { authorization } = client.handshake.headers;
-    const token = authorization?.split(' ')[0];
-    return new JwtService().verify(token || '', {
+    let { token } = client.handshake.query;
+    token = Array.isArray(token) || token == undefined ? '' : token;
+    return new JwtService().verify<TokenPayload>(token, {
       secret: process.env.JWT_SECRET as string,
     });
   }
