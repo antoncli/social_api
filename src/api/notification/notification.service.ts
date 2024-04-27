@@ -17,9 +17,10 @@ export class NotificationService {
   async emitForFriends(user: string, notification: Notification) {
     const friends = await this.friendshipService.friends(user);
     friends.forEach((friend) => {
-      if (friend.name1 === user)
-        this.webSocketGateway.emit(friend.name2, notification);
-      else this.webSocketGateway.emit(friend.name1, notification);
+      this.webSocketGateway.emit(
+        user !== friend.name1 ? friend.name1 : friend.name2,
+        notification,
+      );
     });
   }
 }

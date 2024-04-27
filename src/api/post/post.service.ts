@@ -24,6 +24,7 @@ export class PostService {
     page = page - 1 || 0;
     const posts = await this.postModel
       .find({ name })
+      .sort({ updatedAt: 'desc' })
       .skip(2 * page)
       .limit(limit);
 
@@ -37,19 +38,24 @@ export class PostService {
 
   async getFriends(name: string, page: number, limit: number) {
     const friends = await this.friendshipService.friends(name);
-    const friendIds = friends.map((friend) => friend.id);
+
+    const friendNames = friends.map((friend) => {
+      if (friend.name1 === name) return friend.name2;
+      return friend.name1;
+    });
 
     page = page - 1 || 0;
     const posts = await this.postModel
-      .find({ _id: { $in: friendIds } })
-      .skip(2 * page)
+      .find({ name: { $in: friendNames } })
+      .sort({ updatedAt: 'desc' })
+      .skip(limit * page)
       .limit(limit);
 
     return posts.map((post) => ({
       id: post.id,
       name: post.name,
       text: post.text,
-      date: post.createdAt,
+      date: post.updatedAt,
     }));
   }
 
