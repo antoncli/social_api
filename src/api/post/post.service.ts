@@ -22,17 +22,46 @@ export class PostService {
 
   async get(name: string, page: number, limit: number) {
     page = page - 1 || 0;
-    const posts = await this.postModel
-      .find({ name })
-      .sort({ updatedAt: 'desc' })
-      .skip(2 * page)
-      .limit(limit);
+    // const posts = await this.postModel
+    //   .find({ name })
+    //   .sort({ updatedAt: 'desc' })
+    //   .skip(2 * page)
+    //   .limit(limit);
+
+    const posts = await this.postModel.aggregate([
+      { $match: { name } },
+      { $sort: { updatedAt: 1 } },
+      { $skip: 2 * page },
+      { $limit: limit },
+      { $addFields: { userId: { $toString: '$_id' } } },
+      {
+        $lookup: {
+          from: 'likes',
+          localField: 'userId',
+          foreignField: 'owner',
+          as: 'likeCount',
+        },
+      },
+      {
+        $set: {
+          likeCount: { $arrayElemAt: ['$likeCount.count', 0] },
+        },
+      },
+      {
+        $fill: {
+          output: {
+            likeCount: { value: 0 },
+          },
+        },
+      },
+    ]);
 
     return posts.map((post) => ({
       id: post.id,
       name: post.name,
       text: post.text,
       date: post.createdAt,
+      likeCount: post.likeCount,
     }));
   }
 
@@ -56,6 +85,7 @@ export class PostService {
       name: post.name,
       text: post.text,
       date: post.updatedAt,
+      reactions: post.reactions,
     }));
   }
 
@@ -63,6 +93,22 @@ export class PostService {
     const res = await this.postModel.deleteOne({ name, _id: id });
     if (!res.deletedCount) throw new BadRequestException('Invalid post data!');
     this.emit(name, Notification.postDeleted);
+  }
+
+  async like(id: string) {
+    await this.postModel.findOneAndUpdate(
+      { _id: id },
+      { $inc: { 'reactions.likes': 1 } },
+      { upsert: true },
+    );
+  }
+
+  async dislike(id: string) {
+    this.postModel.findOneAndUpdate(
+      { _id: id },
+      { $inc: { reactions: { count: -1 } } },
+      { upsert: true },
+    );
   }
 
   private emit(name: string, notification: Notification) {

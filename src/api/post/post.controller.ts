@@ -15,6 +15,7 @@ import { AddDto } from './dto/add.dto';
 import { GetDto } from './dto/get.dto';
 import { DeleteDto } from './dto/delete.dto';
 import { GetFriendsDto } from './dto/get_friends.dto';
+import { ReactDto } from './dto/react.dto';
 
 @Controller('post')
 export class PostController {
@@ -48,5 +49,17 @@ export class PostController {
     @Body() dto: DeleteDto,
   ) {
     return this.postService.delete(tokenPayload.name, dto.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('like')
+  like(@Body() dto: ReactDto) {
+    return this.postService.like(dto.id);
+  }
+
+  @UseGuards(JwtGuard)
+  @Post('dislike')
+  dislike(@Body() dto: ReactDto) {
+    return this.postService.dislike(dto.id);
   }
 }
