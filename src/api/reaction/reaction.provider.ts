@@ -3,9 +3,9 @@ import { ReactionSchema } from './schemas/reaction.schema';
 
 export const reactionProviders = [
   {
-    provide: 'LIKE_MODEL',
+    provide: 'REACTION_MODEL',
     useFactory: (connection: Connection) =>
-      connection.model('LIKE', ReactionSchema),
+      connection.model('REACTION', ReactionSchema),
     inject: ['DATABASE_CONNECTION'],
   },
 ];

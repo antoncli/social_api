@@ -1,39 +1,47 @@
 import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
 import { ReactionService } from './reaction.service';
 import { JwtGuard } from '../auth/guard';
-import { LikeDto } from './dto/like.dto';
+import { ReactionDto } from './dto/reaction.dto';
+import { TokenPayload } from '../auth/interfaces/token-payload.interface';
+import { GetTokenPayload } from '../auth/decorator';
 
-@Controller('like')
+@Controller('reaction')
 export class ReactionController {
   constructor(private reactionService: ReactionService) {}
 
   @UseGuards(JwtGuard)
-  @Post('increment')
-  like(@Body() dto: LikeDto) {
-    return this.reactionService.like(dto.owner);
+  @Post('like')
+  like(
+    @GetTokenPayload() tokenPayload: TokenPayload,
+    @Body() dto: ReactionDto,
+  ) {
+    return this.reactionService.like(dto.owner, tokenPayload.name);
   }
 
   @UseGuards(JwtGuard)
-  @Post('decrement')
-  unlike(@Body() dto: LikeDto) {
-    return this.reactionService.unlike(dto.owner);
+  @Post('unlike')
+  unlike(
+    @GetTokenPayload() tokenPayload: TokenPayload,
+    @Body() dto: ReactionDto,
+  ) {
+    return this.reactionService.unlike(dto.owner, tokenPayload.name);
   }
 
   @UseGuards(JwtGuard)
-  @Post('increment')
-  dislike(@Body() dto: LikeDto) {
-    return this.reactionService.dislike(dto.owner);
+  @Post('dislike')
+  dislike(
+    @GetTokenPayload() tokenPayload: TokenPayload,
+    @Body() dto: ReactionDto,
+  ) {
+    return this.reactionService.dislike(dto.owner, tokenPayload.name);
   }
 
   @UseGuards(JwtGuard)
-  @Post('decrement')
-  undislike(@Body() dto: LikeDto) {
-    return this.reactionService.undislike(dto.owner);
-  }
-
-  @UseGuards(JwtGuard)
-  @Get('count')
-  count(@Query() dto: LikeDto) {
-    return this.reactionService.count(dto.owner);
+  @Post('undislike')
+  undislike(
+    @GetTokenPayload() tokenPayload: TokenPayload,
+    @Body() dto: ReactionDto,
+  ) {
+    return this.reactionService.undislike(dto.owner, tokenPayload.name);
   }
 }

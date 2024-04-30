@@ -1,8 +1,8 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class ReactDto {
+export class ReactionDto {
   @IsString()
   @IsNotEmpty()
   // @ts-ignore
-  id: string;
+  owner: string;
 }

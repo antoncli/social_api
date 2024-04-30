@@ -21,47 +21,16 @@ export class PostService {
   }
 
   async get(name: string, page: number, limit: number) {
-    page = page - 1 || 0;
-    // const posts = await this.postModel
-    //   .find({ name })
-    //   .sort({ updatedAt: 'desc' })
-    //   .skip(2 * page)
-    //   .limit(limit);
-
-    const posts = await this.postModel.aggregate([
-      { $match: { name } },
-      { $sort: { updatedAt: 1 } },
-      { $skip: 2 * page },
-      { $limit: limit },
-      { $addFields: { userId: { $toString: '$_id' } } },
-      {
-        $lookup: {
-          from: 'likes',
-          localField: 'userId',
-          foreignField: 'owner',
-          as: 'likeCount',
-        },
-      },
-      {
-        $set: {
-          likeCount: { $arrayElemAt: ['$likeCount.count', 0] },
-        },
-      },
-      {
-        $fill: {
-          output: {
-            likeCount: { value: 0 },
-          },
-        },
-      },
-    ]);
+    const posts = await this.getPosts([name], name, page - 1 || 0, limit);
 
     return posts.map((post) => ({
-      id: post.id,
+      id: post._id,
       name: post.name,
       text: post.text,
       date: post.createdAt,
       likeCount: post.likeCount,
+      liked: post.users.length ? post.liked : false,
+      users: post.users,
     }));
   }
 
@@ -73,19 +42,16 @@ export class PostService {
       return friend.name1;
     });
 
-    page = page - 1 || 0;
-    const posts = await this.postModel
-      .find({ name: { $in: friendNames } })
-      .sort({ updatedAt: 'desc' })
-      .skip(limit * page)
-      .limit(limit);
+    const posts = await this.getPosts(friendNames, name, page - 1 || 0, limit);
 
     return posts.map((post) => ({
-      id: post.id,
+      id: post._id,
       name: post.name,
       text: post.text,
-      date: post.updatedAt,
-      reactions: post.reactions,
+      date: post.createdAt,
+      likeCount: post.likeCount,
+      liked: post.users.length ? post.liked : false,
+      users: post.users,
     }));
   }
 
@@ -95,20 +61,54 @@ export class PostService {
     this.emit(name, Notification.postDeleted);
   }
 
-  async like(id: string) {
-    await this.postModel.findOneAndUpdate(
-      { _id: id },
-      { $inc: { 'reactions.likes': 1 } },
-      { upsert: true },
-    );
-  }
-
-  async dislike(id: string) {
-    this.postModel.findOneAndUpdate(
-      { _id: id },
-      { $inc: { reactions: { count: -1 } } },
-      { upsert: true },
-    );
+  private async getPosts(
+    names: string[],
+    likedBy: string,
+    page: number,
+    limit: number,
+  ) {
+    return await this.postModel.aggregate([
+      { $match: { name: { $in: names } } },
+      { $sort: { updatedAt: -1 } },
+      { $skip: limit * page },
+      { $limit: limit },
+      { $addFields: { userId: { $toString: '$_id' } } },
+      {
+        $lookup: {
+          from: 'reactions',
+          localField: 'userId',
+          foreignField: 'owner',
+          as: 'likeCount',
+        },
+      },
+      {
+        $set: {
+          likeCount: { $arrayElemAt: ['$likeCount.likes.count', 0] },
+          users: { $arrayElemAt: ['$likeCount.likes.users', 0] },
+        },
+      },
+      {
+        $fill: {
+          output: {
+            users: { value: [] },
+          },
+        },
+      },
+      {
+        $addFields: {
+          liked: {
+            $setIsSubset: [[likedBy], '$users'],
+          },
+        },
+      },
+      {
+        $fill: {
+          output: {
+            likeCount: { value: 0 },
+          },
+        },
+      },
+    ]);
   }
 
   private emit(name: string, notification: Notification) {
