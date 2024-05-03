@@ -7,6 +7,7 @@ import { FriendshipModule } from './api/friendship/friendship.module';
 import { PostModule } from './api/post/post.module';
 import { NotificationModule } from './api/notification/notification.module';
 import { ReactionModule } from './api/reaction/reaction.module';
+import { CommentModule } from './api/comment/comment.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { ReactionModule } from './api/reaction/reaction.module';
     PostModule,
     NotificationModule,
     ReactionModule,
+    CommentModule,
   ],
 })
 export class AppModule {}

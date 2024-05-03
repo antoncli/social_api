@@ -6,31 +6,33 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { SocketAuthMiddleware } from '../auth/guard/ws.middleware';
-import { Notification } from './enums/notification';
 import { WsJwtGuard } from '../auth/guard';
+import { CommentEvent } from './enums/CommentEvent';
 
 @WebSocketGateway({
-  namespace: 'notification',
+  namespace: 'comment',
   cors: {
     origin: ['http://localhost:3333'],
   },
 })
-export class NotificationGateway implements OnGatewayInit, OnGatewayConnection {
+export class CommentGateway implements OnGatewayInit, OnGatewayConnection {
   @WebSocketServer()
   server!: Server;
-  user!: string;
+  owner!: string;
 
   afterInit(client: Socket) {
     client.use(SocketAuthMiddleware() as any);
   }
 
   handleConnection(client: any, ...args: any[]) {
-    console.log('NotificationGateway');
-    this.user = WsJwtGuard.validateToken(client).name;
+    console.log('CommentGateway');
+    console.log(client.handshake.query);
+    WsJwtGuard.validateToken(client);
+    // this.owner = WsJwtGuard.validateToken(client).name;
   }
 
-  emit(user: string, notification: Notification) {
-    if (user !== this.user) return;
-    this.server.emit(notification);
+  emit(user: string, event: CommentEvent) {
+    if (user !== this.owner) return;
+    this.server.emit(event);
   }
 }
