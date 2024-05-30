@@ -18,6 +18,7 @@ export class CommentService {
       { $push: { comments: { user, text } } },
       { upsert: true },
     );
+    this.emit(owner, CommentEvent.commentAdded);
   }
 
   async delete(owner: string, user: string, commentId: string) {
@@ -28,6 +29,7 @@ export class CommentService {
       },
       { $pull: { comments: { _id: commentId, user } } },
     );
+    this.emit(owner, CommentEvent.commentDeleted);
   }
 
   async get(owner: string, page: number, limit: number) {
@@ -44,6 +46,7 @@ export class CommentService {
         $project: {
           id: '$comments._id',
           user: '$comments.user',
+          owner,
           text: '$comments.text',
           createdAt: '$comments.createdAt',
           updatedAt: '$comments.updatedAt',
@@ -51,6 +54,39 @@ export class CommentService {
         },
       },
     ]);
+  }
+
+  async getIds(owner: string, page: number, limit: number) {
+    const data = await this.commentModel.aggregate([
+      {
+        $match: { owner },
+      },
+      { $limit: 1 },
+      { $unwind: '$comments' },
+      { $sort: { 'comments.updatedAt': -1 } },
+      { $skip: limit * (page - 1 || 0) },
+      { $limit: limit },
+      {
+        $project: {
+          id: '$comments._id',
+          _id: 0,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          ids: { $push: '$id' },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          ids: 1,
+        },
+      },
+    ]);
+
+    return data[0].ids!;
   }
 
   emit(user: string, notification: CommentEvent) {

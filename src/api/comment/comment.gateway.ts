@@ -10,7 +10,7 @@ import { WsJwtGuard } from '../auth/guard';
 import { CommentEvent } from './enums/CommentEvent';
 
 @WebSocketGateway({
-  namespace: 'comment',
+  namespace: '/comment',
   cors: {
     origin: ['http://localhost:3333'],
   },
@@ -24,15 +24,13 @@ export class CommentGateway implements OnGatewayInit, OnGatewayConnection {
     client.use(SocketAuthMiddleware() as any);
   }
 
-  handleConnection(client: any, ...args: any[]) {
-    console.log('CommentGateway');
-    console.log(client.handshake.query);
+  handleConnection(client: any) {
     WsJwtGuard.validateToken(client);
-    // this.owner = WsJwtGuard.validateToken(client).name;
+    this.owner = client.handshake.query.owner;
   }
 
-  emit(user: string, event: CommentEvent) {
-    if (user !== this.owner) return;
+  emit(owner: string, event: CommentEvent) {
+    if (this.owner != null && owner !== this.owner) return;
     this.server.emit(event);
   }
 }

@@ -10,7 +10,7 @@ import { Notification } from './enums/notification';
 import { WsJwtGuard } from '../auth/guard';
 
 @WebSocketGateway({
-  namespace: 'notification',
+  namespace: '/notification',
   cors: {
     origin: ['http://localhost:3333'],
   },
@@ -24,13 +24,12 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection {
     client.use(SocketAuthMiddleware() as any);
   }
 
-  handleConnection(client: any, ...args: any[]) {
-    console.log('NotificationGateway');
+  handleConnection(client: any) {
     this.user = WsJwtGuard.validateToken(client).name;
   }
 
   emit(user: string, notification: Notification) {
-    if (user !== this.user) return;
+    if (this.user != null && user !== this.user) return;
     this.server.emit(notification);
   }
 }

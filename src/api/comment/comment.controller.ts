@@ -35,4 +35,10 @@ export class CommentController {
   get(@Query() dto: GetDto) {
     return this.commentService.get(dto.owner, dto.page, dto.limit);
   }
+
+  @UseGuards(JwtGuard)
+  @Get('getIds')
+  getIds(@Query() dto: GetDto) {
+    return this.commentService.getIds(dto.owner, dto.page, dto.limit);
+  }
 }
