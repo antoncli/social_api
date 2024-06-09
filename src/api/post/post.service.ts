@@ -4,6 +4,7 @@ import { Post } from './interfaces/post.interface';
 import { FriendshipService } from '../friendship/friendship.service';
 import { NotificationService } from '../notification/notification.service';
 import { Notification } from '../notification/enums/notification';
+import { reactionsAggregation } from 'src/db/helpers/reactions_aggregation.helper';
 
 @Injectable({})
 export class PostService {
@@ -73,41 +74,7 @@ export class PostService {
       { $skip: limit * page },
       { $limit: limit },
       { $addFields: { userId: { $toString: '$_id' } } },
-      {
-        $lookup: {
-          from: 'reactions',
-          localField: 'userId',
-          foreignField: 'owner',
-          as: 'likeCount',
-        },
-      },
-      {
-        $set: {
-          likeCount: { $arrayElemAt: ['$likeCount.likes.count', 0] },
-          users: { $arrayElemAt: ['$likeCount.likes.users', 0] },
-        },
-      },
-      {
-        $fill: {
-          output: {
-            users: { value: [] },
-          },
-        },
-      },
-      {
-        $addFields: {
-          liked: {
-            $setIsSubset: [[likedBy], '$users'],
-          },
-        },
-      },
-      {
-        $fill: {
-          output: {
-            likeCount: { value: 0 },
-          },
-        },
-      },
+      ...reactionsAggregation(likedBy, 'userId', 'owner'),
     ]);
   }
 

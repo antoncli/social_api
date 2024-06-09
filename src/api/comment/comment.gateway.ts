@@ -7,7 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { SocketAuthMiddleware } from '../auth/guard/ws.middleware';
 import { WsJwtGuard } from '../auth/guard';
-import { CommentEvent } from './enums/CommentEvent';
+import { CommentEvent } from './enums/comment_event';
 
 @WebSocketGateway({
   namespace: '/comment',
@@ -29,8 +29,8 @@ export class CommentGateway implements OnGatewayInit, OnGatewayConnection {
     this.owner = client.handshake.query.owner;
   }
 
-  emit(owner: string, event: CommentEvent) {
+  emit(owner: string, event: CommentEvent, commentId: string) {
     if (this.owner != null && owner !== this.owner) return;
-    this.server.emit(event);
+    this.server.emit(event, commentId);
   }
 }
