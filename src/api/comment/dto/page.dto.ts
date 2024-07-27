@@ -1,13 +1,18 @@
 import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class GetDto {
+export class PageDto {
   @IsString()
   @IsNotEmpty()
   // @ts-ignore
   owner: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   // @ts-ignore
-  commentId: string;
+  page: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  // @ts-ignore
+  limit: number;
 }
