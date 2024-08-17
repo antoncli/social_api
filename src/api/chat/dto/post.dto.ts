@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
-export class GetDto {
+export class PostDto {
   @IsString()
   @IsNotEmpty()
   // @ts-ignore
@@ -9,5 +9,10 @@ export class GetDto {
   @IsString()
   @IsNotEmpty()
   // @ts-ignore
-  commentId: string;
+  to: string;
+
+  @IsString()
+  @IsNotEmpty()
+  // @ts-ignore
+  text: string;
 }

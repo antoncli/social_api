@@ -30,7 +30,7 @@ export class CommentGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   emit(owner: string, event: CommentEvent, commentId: string) {
-    if (this.owner != null && owner !== this.owner) return;
+    if (this.owner == null || owner !== this.owner) return;
     this.server.emit(event, commentId);
   }
 }

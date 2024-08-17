@@ -12,7 +12,7 @@ import { WsJwtGuard } from '../auth/guard';
 @WebSocketGateway({
   namespace: '/notification',
   cors: {
-    origin: ['http://localhost:3333'],
+    origin: [process.env.WEBAPP_URL],
   },
 })
 export class NotificationGateway implements OnGatewayInit, OnGatewayConnection {
@@ -29,7 +29,7 @@ export class NotificationGateway implements OnGatewayInit, OnGatewayConnection {
   }
 
   emit(user: string, notification: Notification) {
-    if (this.user != null && user !== this.user) return;
+    if (this.user == null || user !== this.user) return;
     this.server.emit(notification);
   }
 }

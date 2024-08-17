@@ -8,6 +8,7 @@ import { PostModule } from './api/post/post.module';
 import { NotificationModule } from './api/notification/notification.module';
 import { ReactionModule } from './api/reaction/reaction.module';
 import { CommentModule } from './api/comment/comment.module';
+import { ChatModule } from './api/chat/chat.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { CommentModule } from './api/comment/comment.module';
     NotificationModule,
     ReactionModule,
     CommentModule,
+    ChatModule,
   ],
 })
 export class AppModule {}
