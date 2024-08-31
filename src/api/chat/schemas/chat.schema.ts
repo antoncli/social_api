@@ -1,15 +1,9 @@
 import mongoose from 'mongoose';
 
 export const ChatSchema = new mongoose.Schema({
-  user1: {
+  id: {
     type: String,
-    require: [true, 'Please provide comment owner!'],
-    index: true,
-  },
-  user2: {
-    type: String,
-    require: [true, 'Please provide comment owner!'],
-    index: true,
+    require: [true, 'Please provide chat id!'],
   },
   messages: {
     type: [
@@ -20,12 +14,12 @@ export const ChatSchema = new mongoose.Schema({
             default: mongoose.Types.ObjectId,
           },
           user: {
-            type: String,
-            require: [true, 'Please provide comment user!'],
+            type: Number,
+            require: [true, 'Please provide the user of the message!'],
           },
           text: {
             type: String,
-            require: [true, 'Please provide comment text!'],
+            require: [true, 'Please provide the text of the message!'],
           },
           createdAt: Number,
           updatedAt: Number,
