@@ -17,9 +17,8 @@ export class ChatService {
 
   async saveMessage(dto: PostDto) {
     const users = [dto.owner, dto.to].sort();
-    const id = await this.getChatId(users[0], users[1]);
     const result = await this.chatModel.findOneAndUpdate(
-      { id },
+      { users },
       {
         $push: {
           messages: {
@@ -28,18 +27,24 @@ export class ChatService {
           },
         },
       },
-      { upsert: true, new: true },
+      {
+        upsert: true,
+        new: true,
+        projection: {
+          messages: { $slice: -1 },
+        },
+      },
     );
 
     const message: Message = {
       id: result.messages[0]._id.toString(),
+      chatId: await this.getChatId(users[0], users[1]),
       user: dto.owner,
       text: result.messages[0].text,
       createdAt: result.messages[0].createdAt,
       updatedAt: result.messages[0].updatedAt,
     };
 
-    console.log('Hello!');
     this.webSocketGateway.post(dto.owner, message);
     this.webSocketGateway.post(dto.to, message);
   }

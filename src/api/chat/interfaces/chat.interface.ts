@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 export interface Chat {
-  readonly id: string;
+  readonly users: string[];
   messages: {
     readonly _id: mongoose.Types.ObjectId;
-    readonly user: number;
+    readonly user: string;
     text: string;
     readonly createdAt: number;
     readonly updatedAt: number;

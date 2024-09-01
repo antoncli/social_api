@@ -1,6 +1,8 @@
 import {
+  ConnectedSocket,
   MessageBody,
   OnGatewayConnection,
+  OnGatewayDisconnect,
   OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
@@ -21,6 +23,7 @@ import { BadRequestTransformationFilter } from 'src/share/filters/bad_request_tr
 import { PostDto } from './dto/post.dto';
 import { ChatEvent } from './enums/chat_event';
 import { ChatService } from './chat.service';
+import Sockets from './classes/sockets.manager';
 
 @WebSocketGateway({
   namespace: '/chat',
@@ -28,56 +31,62 @@ import { ChatService } from './chat.service';
     origin: [process.env.WEBAPP_URL],
   },
 })
-export class ChatGateway implements OnGatewayInit, OnGatewayConnection {
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
   server!: Server;
-  user!: string;
+  private sockets: Sockets;
 
   constructor(
     @Inject(forwardRef(() => ChatService))
     private readonly chatService: ChatService,
-  ) {}
-
-  afterInit(client: Socket) {
-    client.use(SocketAuthMiddleware() as any);
+  ) {
+    this.sockets = new Sockets();
   }
 
-  handleConnection(client: any) {
-    console.log(client);
-    client.send('Hello');
-    this.user = WsJwtGuard.validateToken(client).name;
+  afterInit(socket: Socket) {
+    socket.use(SocketAuthMiddleware() as any);
+  }
+
+  handleConnection(socket: Socket) {
+    const name = WsJwtGuard.validateToken(socket).name;
+    if (name == null) socket.disconnect();
+    this.sockets.set(name, socket);
+  }
+
+  handleDisconnect(client: Socket) {
+    this.sockets.deleteBySocketId(client.id);
   }
 
   @UseFilters(new BadRequestTransformationFilter())
   @UsePipes(new ValidationPipe())
   @SubscribeMessage('post')
-  handlePost(@MessageBody() data: PostDto) {
-    if (this.user == null || data.owner != this.user) return;
+  handlePost(@ConnectedSocket() socket: Socket, @MessageBody() data: PostDto) {
+    const ownerSocket = this.sockets.get(data.owner);
+    if (ownerSocket == null || ownerSocket.id !== socket.id) return;
     this.chatService.saveMessage(data);
   }
 
   post(user: string, message: Message) {
-    console.log(this.user);
-    if (this.user == null || user !== this.user) return;
     this._emitNewMessage(user, message);
   }
 
   edit(user: string, message: Message) {
-    if (this.user == null || user !== this.user) return;
+    // if (this.user == null || user !== this.user) return;
   }
 
   delete(user: string, message: Message) {
-    if (this.user == null || user !== this.user) return;
+    // if (this.user == null || user !== this.user) return;
   }
 
   private _emitNewMessage(user: string, message: Message) {
-    if (this.user == null || user !== this.user) return;
-    console.log(ChatEvent.newMessage, message);
-    this.server.emit(ChatEvent.newMessage, message);
+    const socket = this.sockets.get(user);
+    if (socket) socket.emit(ChatEvent.newMessage, message);
   }
 
   private emit(user: string, event: ChatEvent) {
-    if (this.user == null || user !== this.user) return;
+    // if (this.user == null || user !== this.user) return;
     // this.server.emit(notification);
   }
 }

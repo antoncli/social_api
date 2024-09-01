@@ -1,9 +1,8 @@
 import mongoose from 'mongoose';
 
 export const ChatSchema = new mongoose.Schema({
-  id: {
-    type: String,
-    require: [true, 'Please provide chat id!'],
+  users: {
+    type: Array(String),
   },
   messages: {
     type: [
@@ -14,7 +13,7 @@ export const ChatSchema = new mongoose.Schema({
             default: mongoose.Types.ObjectId,
           },
           user: {
-            type: Number,
+            type: String,
             require: [true, 'Please provide the user of the message!'],
           },
           text: {
